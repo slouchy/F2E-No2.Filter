@@ -33,14 +33,13 @@ function SetFilterResult() {
     let keyword = $(".txt-keyword").val();
     let location = $(".ddl-location").val();
     let price = $(".ddl-price").val();
-
-
-    console.log("InFilter");
-
+    let searchCount = 0;
+    let pageSize = 10;
 
     $list.html("");
     data.records.map((item, i) => {
         if (location === "-" && price === "-" && keyword === "") {
+            searchCount++;
             return item;
         } else {
             let currentItem, isCondition;
@@ -73,6 +72,7 @@ function SetFilterResult() {
             }
 
             if (currentItem) {
+                searchCount++;
                 return currentItem;
             }
         }
@@ -88,6 +88,35 @@ function SetFilterResult() {
             $list.append(itemHTML);
         }
     });
+
+    pageSize = searchCount > 10 ? 10 : searchCount;
+    $(".search-count").html(searchCount);
+    $(".page-size").html(pageSize);
+    $(".page-count").html(Math.ceil(searchCount / pageSize));
+    SetPage(Math.ceil(searchCount / pageSize));
+}
+
+function SetPage(totalpage) {
+    let pageHTML = "";
+    pageHTML += `
+        <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+				<span aria-hidden="true">&laquo;</span>
+				<span class="sr-only">Previous</span>
+			</a>
+        </li>`;
+    for (var i = 0; i < totalpage; i++) {
+        pageHTML += `<li class="page-item"><a class="page-link activate" href="#">${(i + 1)}</a></li>`;
+    }
+
+    pageHTML += `
+        <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+				<span aria-hidden="true">&raquo;</span>
+				<span class="sr-only">Next</span>
+			</a>
+        </li>`;
+    $(".pagination").html(pageHTML);
 }
 
 function GetSearchTemplate() {
