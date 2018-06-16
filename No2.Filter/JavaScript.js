@@ -11,9 +11,13 @@ var funcTimeDelay = (function () {
 $(function () {
     InitDDL($(".ddl-location"), "Zone");
     InitDDL($(".ddl-price"), "ticktinfo");
-    $(".ddl-location, .ddl-price").change(SetFilterResult);
+    $(".ddl-location, .ddl-price").change(() => {
+        SetFilterResult();
+    });
     $(".txt-keyword").keyup(function () {
-        funcTimeDelay(SetFilterResult, 500);
+        funcTimeDelay(() => {
+            SetFilterResult();
+        }, 500);
     });
     SetFilterResult();
 })
@@ -28,13 +32,14 @@ function InitDDL($ddl, column) {
     });
 }
 
-function SetFilterResult() {
+function SetFilterResult(currentPage) {
     let $list = $(".result-content");
     let keyword = $(".txt-keyword").val();
     let location = $(".ddl-location").val();
     let price = $(".ddl-price").val();
     let searchCount = 0;
     let pageSize = 10;
+    currentPage = currentPage || 1;
 
     $list.html("");
     data.records.map((item, i) => {
@@ -76,8 +81,10 @@ function SetFilterResult() {
                 return currentItem;
             }
         }
+    }).filter((item, i) => {
+        return item !== undefined;
     }).forEach((item, i) => {
-        if (item !== undefined) {
+        if (item !== undefined && i < currentPage * 10 && i >= (currentPage - 1) * 10) {
             var itemHTML = GetSearchTemplate()
                 .replace("[imgSrc]", `${item.Picture1.substring(0, item.Picture1.indexOf("&") + 1)}w=220`)
                 .replace("[title]", item.Name)
@@ -93,25 +100,32 @@ function SetFilterResult() {
     $(".search-count").html(searchCount);
     $(".page-size").html(pageSize);
     $(".page-count").html(Math.ceil(searchCount / pageSize));
-    SetPage(Math.ceil(searchCount / pageSize));
+    SetPage(Math.ceil(searchCount / pageSize), currentPage);
 }
 
-function SetPage(totalpage) {
+function SetPage(totalpage, currentPage) {
     let pageHTML = "";
+    let prevPage = (currentPage - 1) === 0 ? 1 : currentPage - 1;
+    let nextPage = currentPage === totalpage ? currentPage : currentPage + 1;
     pageHTML += `
         <li class="page-item">
-            <a class="page-link" href="#" aria-label="Previous">
+            <a class="page-link" href="javascript:SetFilterResult(${prevPage})" aria-label="Previous">
 				<span aria-hidden="true">&laquo;</span>
 				<span class="sr-only">Previous</span>
 			</a>
         </li>`;
     for (var i = 0; i < totalpage; i++) {
-        pageHTML += `<li class="page-item"><a class="page-link activate" href="#">${(i + 1)}</a></li>`;
+        let pageActivate = "";
+        if ((i + 1) === currentPage) {
+            pageActivate = "activate";
+        }
+
+        pageHTML += `<li class="page-item"><a class="page-link ${pageActivate}" href="javascript:SetFilterResult(${(i + 1)})">${(i + 1)}</a></li>`;
     }
 
     pageHTML += `
         <li class="page-item">
-            <a class="page-link" href="#" aria-label="Next">
+            <a class="page-link" href="javascript:SetFilterResult(${nextPage})" aria-label="Next">
 				<span aria-hidden="true">&raquo;</span>
 				<span class="sr-only">Next</span>
 			</a>
