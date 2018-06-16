@@ -127,7 +127,7 @@ function isInSelectedDayOpen(item, $cbWeek) {
     //if (item.Opentime.indexOf("每日") > -1)
 
     $cbWeek.each(function (i, day) {
-        if ($(this).is(":checked") && !isOpen) {
+        if ($(this).is(":checked") && !isOpen) { 
             switch ($(this).val()) {
                 case "6":
                     if (item.Opentime.indexOf("每日") > -1 ||
