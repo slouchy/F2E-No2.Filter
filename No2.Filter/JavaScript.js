@@ -29,7 +29,8 @@ function InitDDL($ddl, column) {
         if (arr.indexOf(item) === i) {
             $ddl.append(`<option value='${item}'>${item === "" ? "未註明" : item}</option>`);
         }
-    });
+        });
+    //$ddl.chosen().trigger("chosen:updated");
 }
 
 function SetFilterResult(currentPage) {
