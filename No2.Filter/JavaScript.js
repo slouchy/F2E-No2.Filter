@@ -11,7 +11,7 @@ var funcTimeDelay = (function () {
 $(function () {
     InitDDL($(".ddl-location"), "Zone");
     InitDDL($(".ddl-price"), "ticktinfo");
-    $(".ddl-location, .ddl-price").change(() => {
+    $(".ddl-location, .ddl-price, input[type='checkbox'][name='cbweek']").change(() => {
         SetFilterResult();
     });
     $(".txt-keyword").keyup(function () {
@@ -20,6 +20,16 @@ $(function () {
         }, 500);
     });
     SetFilterResult();
+
+
+
+    data.records.map((item, i) => {
+        return item["Opentime"];
+    }).filter((item, i, arr) => {
+        if (arr.indexOf(item) === i) {
+            console.log(item);
+        }
+    });
 })
 
 function InitDDL($ddl, column) {
@@ -29,22 +39,23 @@ function InitDDL($ddl, column) {
         if (arr.indexOf(item) === i) {
             $ddl.append(`<option value='${item}'>${item === "" ? "未註明" : item}</option>`);
         }
-        });
+    });
     //$ddl.chosen().trigger("chosen:updated");
 }
 
 function SetFilterResult(currentPage) {
     let $list = $(".result-content");
+    let $cbWeek = $("input[type='checkbox'][name='cbweek']:checked");
     let keyword = $(".txt-keyword").val();
     let location = $(".ddl-location").val();
     let price = $(".ddl-price").val();
     let searchCount = 0;
     let pageSize = 10;
     currentPage = currentPage || 1;
-
     $list.html("");
+
     data.records.map((item, i) => {
-        if (location === "-" && price === "-" && keyword === "") {
+        if (location === "-" && price === "-" && keyword === "" && $cbWeek.length === 0) {
             searchCount++;
             return item;
         } else {
@@ -59,6 +70,12 @@ function SetFilterResult(currentPage) {
 
             if (currentItem && price !== "-") {
                 if (currentItem.ticktinfo !== price) {
+                    currentItem = null;
+                }
+            }
+
+            if (currentItem && $cbWeek.length > 0) {
+                if (!isInSelectedDayOpen(currentItem, $cbWeek)) {
                     currentItem = null;
                 }
             }
@@ -102,6 +119,48 @@ function SetFilterResult(currentPage) {
     $(".page-size").html(pageSize);
     $(".page-count").html(Math.ceil(searchCount / pageSize));
     SetPage(Math.ceil(searchCount / pageSize), currentPage);
+}
+
+function isInSelectedDayOpen(item, $cbWeek) {
+    let isOpen = false;
+
+    //if (item.Opentime.indexOf("每日") > -1)
+
+    $cbWeek.each(function (i, day) {
+        if ($(this).is(":checked") && !isOpen) {
+            switch ($(this).val()) {
+                case "6":
+                    if (item.Opentime.indexOf("每日") > -1 ||
+                        item.Opentime.indexOf("至週六") > -1 ||
+                        item.Opentime.indexOf("週六至") > -1 ||
+                        item.Opentime.indexOf("週五、六") > -1 ||
+                        item.Opentime.indexOf("至週六20") > -1 ||
+                        item.Opentime.indexOf("至週日") > -1 ||
+                        item.Opentime.indexOf("全天") > -1 ||
+                        item.Opentime.indexOf("、日") > -1 ||
+                        item.Opentime.indexOf("假日10") > -1 ||
+                        item.Opentime.indexOf("假日09") > -1
+                    ) {
+                        isOpen = true;
+                    }
+                    break;
+                case "7":
+                    if (item.Opentime.indexOf("每日") > -1 ||
+                        item.Opentime.indexOf("至週日") > -1 ||
+                        item.Opentime.indexOf("全天") > -1 ||
+                        item.Opentime.indexOf("、日") > -1 ||
+                        item.Opentime.indexOf("假日10") > -1 ||
+                        item.Opentime.indexOf("假日09") > -1
+                    ) {
+                        isOpen = true;
+                    }
+
+                    break;
+                default:
+            }
+        }
+    });
+    return isOpen;
 }
 
 function SetPage(totalpage, currentPage) {
